@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="banner">
+        <h2>CRYPTO SIGNAL BOT PRO</h2>
+        <p>Enhanced Trading Bot with AI Confirmation & News Analysis</p>
+    </div>
+
+    <div class="analysis-options">
+        <form action="{{ url_for('analyze') }}" method="POST">
+            <div class="form-group">
+                <label for="analysis_type">Analysis Type:</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="analysis_type" value="single" checked>
+                        Single Coin Analysis
+                    </label>
+                    <label>
+                        <input type="radio" name="analysis_type" value="multi">
+                        Multi-Coin Analysis
+                    </label>
+                </div>
+            </div>
+
+            <div id="single-analysis" class="analysis-form">
+                <div class="form-group">
+                    <label for="symbol">Crypto Pair (e.g., BTCUSDT):</label>
+                    <input type="text" id="symbol" name="symbol" required>
+                </div>
+                <div class="form-group">
+                    <label for="interval">Time Interval:</label>
+                    <select id="interval" name="interval" required>
+                        <option value="1m">1 Minute</option>
+                        <option value="5m">5 Minutes</option>
+                        <option value="15m">15 Minutes</option>
+                        <option value="30m">30 Minutes</option>
+                        <option value="1h" selected>1 Hour</option>
+                        <option value="4h">4 Hours</option>
+                        <option value="1d">1 Day</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="multi-analysis" class="analysis-form" style="display: none;">
+                <div class="form-group">
+                    <label for="coins">Crypto Pairs (comma separated, e.g., BTCUSDT,ETHUSDT,SOLUSDT):</label>
+                    <input type="text" id="coins" name="coins">
+                </div>
+                <div class="form-group">
+                    <label for="interval-multi">Time Interval:</label>
+                    <select id="interval-multi" name="interval" required>
+                        <option value="1m">1 Minute</option>
+                        <option value="5m">5 Minutes</option>
+                        <option value="15m">15 Minutes</option>
+                        <option value="30m">30 Minutes</option>
+                        <option value="1h" selected>1 Hour</option>
+                        <option value="4h">4 Hours</option>
+                        <option value="1d">1 Day</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-analyze">Analyze</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const analysisTypeRadios = document.querySelectorAll('input[name="analysis_type"]');
+        const singleAnalysisDiv = document.getElementById('single-analysis');
+        const multiAnalysisDiv = document.getElementById('multi-analysis');
+
+        analysisTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'single') {
+                    singleAnalysisDiv.style.display = 'block';
+                    multiAnalysisDiv.style.display = 'none';
+                } else {
+                    singleAnalysisDiv.style.display = 'none';
+                    multiAnalysisDiv.style.display = 'block';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

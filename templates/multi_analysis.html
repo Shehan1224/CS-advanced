@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="analysis-header">
+        <h2>MULTI-COIN ANALYSIS RESULTS</h2>
+        <p class="time-interval">Time Interval: {{ interval }}</p>
+    </div>
+
+    {% if results %}
+    <div class="summary-section">
+        <h3>SUMMARY OF STRONG SIGNALS</h3>
+        <div class="coin-cards">
+            {% for coin, data in results.items() %}
+            <div class="coin-card {{ data.signal|lower }}">
+                <div class="coin-header">
+                    <h4>{{ coin }}</h4>
+                    <span class="signal-tag {{ data.signal|lower }}">{{ data.signal }}</span>
+                </div>
+                <div class="coin-details">
+                    <p>Confidence: {{ "%.1f"|format(data.probability) }}%</p>
+                    <p>Safety: {% if data.safety > 0.7 %}High{% elif data.safety > 0.5 %}Medium{% else %}Low{% endif %}</p>
+                    <p>Price: {{ data.price }}</p>
+                    <p>TP: {{ data.tp }}</p>
+                    <p>SL: {{ data.sl }}</p>
+                </div>
+                <a href="{{ url_for('analyze') }}?symbol={{ coin }}&interval={{ interval }}" class="btn-details">View Details</a>
+                <a href="https://www.binance.com/en/trade/{{ coin }}?interval={{ interval }}" target="_blank" class="btn-open-chart">
+                    Open Chart
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="no-results">
+        <h3>No strong signals found across all analyzed coins</h3>
+        <p>Try analyzing different coins or using a different time interval.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

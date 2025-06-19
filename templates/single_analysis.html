@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="analysis-header">
+        <h2>CRYPTO SIGNAL ANALYSIS: {{ symbol }}</h2>
+        <p class="current-price">Current Price: {{ current_price }}</p>
+    </div>
+
+    <div class="chart-container">
+        <div id="price-chart"></div>
+        <a href="https://www.binance.com/en/trade/{{ symbol }}?interval={{ interval }}" target="_blank" class="btn-open-chart">
+            Open Chart on Binance
+        </a>
+    </div>
+
+    <div class="analysis-sections">
+        <div class="analysis-section smc-analysis">
+            <h3>SMART MONEY CONCEPT ANALYSIS</h3>
+            <div class="analysis-details">
+                <div class="detail-item">
+                    <span class="detail-label">Recent Order Blocks:</span>
+                    <span class="detail-value">Bullish {{ signals.details.SMC[1]|int if signals.details.SMC[0] == 'BUY' else 0 }} | Bearish {{ signals.details.SMC[1]|int if signals.details.SMC[0] == 'SELL' else 0 }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fair Value Gaps:</span>
+                    <span class="detail-value">Bullish {{ signals.details.SMC[1]|int if signals.details.SMC[0] == 'BUY' else 0 }} | Bearish {{ signals.details.SMC[1]|int if signals.details.SMC[0] == 'SELL' else 0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-section sr-levels">
+            <h3>KEY SUPPORT/RESISTANCE LEVELS</h3>
+            <div class="analysis-details">
+                <div class="detail-item">
+                    <span class="detail-label">Nearest Support:</span>
+                    <span class="detail-value">{{ signals.details.SMC[0] == 'BUY' and signals.details.SMC[1]|int or 'None' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Nearest Resistance:</span>
+                    <span class="detail-value">{{ signals.details.SMC[0] == 'SELL' and signals.details.SMC[1]|int or 'None' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-section fib-levels">
+            <h3>FIBONACCI RETRACEMENT LEVELS</h3>
+            <div class="analysis-details">
+                {% for level, price in fib_levels.items() %}
+                <div class="detail-item">
+                    <span class="detail-label">{{ level }}:</span>
+                    <span class="detail-value">{{ "%.4f"|format(price) }} ({{ "%.2f"|format((current_price - price)/price * 100) }}%)</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="analysis-section indicators">
+            <h3>INDICATOR ANALYSIS</h3>
+            <div class="analysis-details">
+                {% for indicator, (signal, prob) in signals.details.items() %}
+                <div class="detail-item">
+                    <span class="detail-label">{{ indicator }}:</span>
+                    <span class="detail-value {{ signal|lower if signal else 'neutral' }}">
+                        {% if signal %}
+                            {{ signal }} (Probability: {{ "%.1f"|format(prob) }}%)
+                        {% else %}
+                            No clear signal
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="signal-summary {{ signals.signal|lower if signals.signal != 'HOLD' else 'neutral' }}">
+        <h3>COMBINED SIGNAL</h3>
+        {% if signals.signal != "HOLD" %}
+        <p class="signal-message">
+            STRONG {{ signals.signal }} SIGNAL DETECTED
+        </p>
+        <div class="signal-details">
+            <p>Confidence Level: {{ "%.1f"|format(signals.probability) }}%</p>
+            <p>Entry Safety: {% if signals.entry_safety > 0.7 %}High{% elif signals.entry_safety > 0.5 %}Medium{% else %}Low{% endif %}</p>
+            <p>Take Profit: {{ signals.tp }}</p>
+            <p>Stop Loss: {{ signals.sl }}</p>
+        </div>
+        {% else %}
+        <p class="signal-message">No strong trading signal detected</p>
+        {% endif %}
+    </div>
+
+    <div class="recommendation">
+        <h3>RECOMMENDATION</h3>
+        {% if signals.signal != "HOLD" and signals.probability >= 80 and signals.entry_safety > 0.7 %}
+        <p class="strong-recommendation {{ signals.signal|lower }}">
+            STRONG {{ signals.signal }} RECOMMENDATION (High Confidence & Safety)
+        </p>
+        {% elif signals.signal != "HOLD" and signals.probability >= 65 %}
+        <p class="moderate-recommendation {{ signals.signal|lower }}">
+            Consider {{ signals.signal }} position (Moderate Confidence)
+        </p>
+        {% else %}
+        <p class="neutral-recommendation">
+            No clear trading opportunity - Wait for better setup
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    const chartData = JSON.parse('{{ chart_data|safe }}');
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartContainer = document.getElementById('price-chart');
+        const chart = LightweightCharts.createChart(chartContainer, {
+            width: chartContainer.clientWidth,
+            height: 400,
+            layout: {
+                backgroundColor: '#1e1e2d',
+                textColor: '#d9d9d9',
+            },
+            grid: {
+                vertLines: {
+                    color: '#2B2B43',
+                },
+                horzLines: {
+                    color: '#2B2B43',
+                },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+            rightPriceScale: {
+                borderColor: '#2B2B43',
+            },
+            timeScale: {
+                borderColor: '#2B2B43',
+            },
+        });
+
+        const candleSeries = chart.addCandlestickSeries({
+            upColor: '#26a69a',
+            downColor: '#ef5350',
+            borderDownColor: '#ef5350',
+            borderUpColor: '#26a69a',
+            wickDownColor: '#ef5350',
+            wickUpColor: '#26a69a',
+        });
+
+        const formattedData = chartData.map(item => ({
+            time: new Date(item.time).getTime() / 1000,
+            open: item.open,
+            high: item.high,
+            low: item.low,
+            close: item.close,
+        }));
+
+        candleSeries.setData(formattedData);
+
+        // Add volume series
+        const volumeSeries = chart.addHistogramSeries({
+            color: '#26a69a',
+            priceFormat: {
+                type: 'volume',
+            },
+            priceScaleId: '',
+            scaleMargins: {
+                top: 0.8,
+                bottom: 0,
+            },
+        });
+
+        const volumeData = chartData.map(item => ({
+            time: new Date(item.time).getTime() / 1000,
+            value: item.volume,
+            color: item.close >= item.open ? '#26a69a' : '#ef5350',
+        }));
+
+        volumeSeries.setData(volumeData);
+
+        // Add indicators
+        if (chartData[0].rsi) {
+            const rsiSeries = chart.addLineSeries({
+                color: '#FF6B6B',
+                lineWidth: 2,
+                priceScaleId: 'right',
+            });
+
+            const rsiData = chartData.map(item => ({
+                time: new Date(item.time).getTime() / 1000,
+                value: item.rsi,
+            }));
+
+            rsiSeries.setData(rsiData);
+        }
+
+        window.addEventListener('resize', function() {
+            chart.applyOptions({ width: chartContainer.clientWidth });
+        });
+    });
+</script>
+{% endblock %}

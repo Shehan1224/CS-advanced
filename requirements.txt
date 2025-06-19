@@ -1,0 +1,11 @@
+
+
+pandas
+numpy
+requests
+textblob
+nltk
+scikit-learn
+colorama
+pyfiglet
+termcolor

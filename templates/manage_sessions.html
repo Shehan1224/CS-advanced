@@ -1,0 +1,71 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="session-management">
+        <h2>Session Management</h2>
+        
+        <div class="section">
+            <h3>Active Sessions</h3>
+            {% if sessions %}
+                <div class="sessions-list">
+                    {% for session_id, data in sessions.items() %}
+                    <div class="session-item">
+                        <div class="session-info">
+                            <p><strong>Session ID:</strong> {{ session_id[:8] }}...</p>
+                            <p><strong>IP Address:</strong> {{ data.ip_address }}</p>
+                            <p><strong>Login Time:</strong> {{ data.login_time }}</p>
+                            <p><strong>Device:</strong> {{ data.user_agent[:50] }}...</p>
+                        </div>
+                        <div class="session-actions">
+                            <a href="{{ url_for('logout_session', session_id=session_id) }}" 
+                               class="btn btn-danger" 
+                               onclick="return confirm('Are you sure you want to logout this session?')">
+                                Logout Session
+                            </a>
+                            <a href="{{ url_for('force_logout_user', session_id=session_id) }}" 
+                               class="btn btn-danger" 
+                               onclick="return confirm('This will logout the user and temporarily block their device. Are you sure?')">
+                                Force Logout & Block
+                            </a>
+                            <a href="{{ url_for('block_device', device_hash=data.device_hash) }}" 
+                               class="btn btn-warning"
+                               onclick="return confirm('Are you sure you want to permanently block this device?')">
+                                Permanent Block
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No active sessions</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h3>Blocked Devices</h3>
+            {% if blocked_devices %}
+                <div class="blocked-list">
+                    {% for device_hash in blocked_devices %}
+                    <div class="blocked-item">
+                        <span>Device: {{ device_hash[:16] }}...</span>
+                        <a href="{{ url_for('unblock_device', device_hash=device_hash) }}" 
+                           class="btn btn-success"
+                           onclick="return confirm('Are you sure you want to unblock this device?')">
+                            Unblock
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No blocked devices</p>
+            {% endif %}
+        </div>
+
+        <div class="back-link">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
